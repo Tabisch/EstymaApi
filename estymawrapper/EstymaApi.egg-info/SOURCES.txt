@@ -1,8 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-setup.cfg
-estymawrapper/EstymaApi.egg-info/PKG-INFO
-estymawrapper/EstymaApi.egg-info/SOURCES.txt
-estymawrapper/EstymaApi.egg-info/dependency_links.txt
-estymawrapper/EstymaApi.egg-info/top_level.txt
