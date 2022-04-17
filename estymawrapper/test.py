@@ -1,7 +1,7 @@
 import json
 from api import EstymaApi
 
-credentials = json.loads("./credentials.json")
+credentials = json.load(open('credentials.json'))
 
 apisession = EstymaApi(credentials["username"],credentials["password"])
 
