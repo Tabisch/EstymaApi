@@ -22,7 +22,7 @@ class EstymaApi:
     async def init(self):
         self.session = aiohttp.ClientSession()
         await self.login()
-        self.Devices = self.get_Devices()
+        self.Devices = await self.get_Devices()
 
 
     async def login(self):
