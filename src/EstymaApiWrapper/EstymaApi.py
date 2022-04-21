@@ -49,8 +49,11 @@ class EstymaApi:
 
         result = self.session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False)
 
-        if(result.status_code == 200):
-            raise Exception()
+        if(result.status_code == 302):
+            self._initialized = True
+            return
+
+        raise Exception
 
     def fetchDevicedatatask(self, deviceid):
         json = json.loads(self.session.post(self.update_url.format(json = json.loads(self.http_url), headers=self.headers, data=self.fetchDevicedataBody.format(deviceid)).text))
