@@ -28,7 +28,7 @@ class EstymaApi:
         self._initialized = False
         self._returncode = "None"
 
-        self.deviceData = None
+        self._deviceData = None
 
         self.lastUpdated = None
         self.scanInterval = scanInterval
@@ -82,11 +82,11 @@ class EstymaApi:
         jsonobj = json.loads("{}")
 
         for response in responses:
-            jsonobj[f'{response["{response}"]}'] = response
+            jsonobj[f'{response["deviceid"]}'] = response
 
         self.lastUpdated = int(time())
 
-        return self.translateApiOutput(json.loads(json.dumps(jsonobj)))
+        self._deviceData = self.translateApiOutput(json.loads(json.dumps(jsonobj)))
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
@@ -94,9 +94,9 @@ class EstymaApi:
             self.fetchDevicedata()
 
         if(DeviceID == None):
-            return self.deviceData
+            return self._deviceData
 
-        return self.deviceData[f"{DeviceID}"]
+        return self._deviceData[f'{DeviceID}']
 
     async def getDevices(self):
 
