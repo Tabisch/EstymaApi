@@ -39,6 +39,7 @@ class EstymaApi:
     def initialized(self) -> bool:
         return self._initialized
 
+    #login and get devices
     async def initialize(self):
         self.session = aiohttp.ClientSession()
         self.login()
