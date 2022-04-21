@@ -26,6 +26,7 @@ class EstymaApi:
         self.Devices = None
 
         self._initialized = False
+        self._returncode = None
 
         self.deviceData = None
 
@@ -51,16 +52,19 @@ class EstymaApi:
 
         if(result.status_code == 302):
             self._initialized = True
+            self._returncode = result.status_code
             return
 
         raise Exception
 
+    #fetch data for all devices
     def fetchDevicedatatask(self, deviceid):
         json = json.loads(self.session.post(self.update_url.format(json = json.loads(self.http_url), headers=self.headers, data=self.fetchDevicedataBody.format(deviceid)).text))
         json["deviceid"] = deviceid
 
         return json
 
+    #init data fetching
     async def fetchDevicedata(self):
         tasks = []
 
@@ -78,6 +82,7 @@ class EstymaApi:
 
         return self.translateApiOutput(json.loads(json.dumps(jsonobj)))
 
+    #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
         if(int(time) - 30 > self.lastUpdated):
             self.fetchDevicedata()
