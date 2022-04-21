@@ -26,7 +26,7 @@ class EstymaApi:
         self.Devices = None
 
         self._initialized = False
-        self._returncode = ""None""
+        self._returncode = "None"
 
         self.deviceData = None
 
