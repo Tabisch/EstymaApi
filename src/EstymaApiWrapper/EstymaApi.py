@@ -31,7 +31,7 @@ class EstymaApi:
 
         self.session = None
 
-    async def init(self):
+    async def initialize(self):
         self.session = aiohttp.ClientSession()
         await self.login()
         self.Devices = await self.getDevices()
