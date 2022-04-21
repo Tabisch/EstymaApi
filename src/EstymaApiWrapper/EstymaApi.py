@@ -48,6 +48,7 @@ class EstymaApi:
         self.session = aiohttp.ClientSession()
         self.login()
         self.Devices = await self.getDevices()
+        await self.fetchDevicedata()
 
     #login to Api
     async def login(self):
@@ -95,7 +96,7 @@ class EstymaApi:
         if(DeviceID == None):
             return self.deviceData
 
-        return self.deviceData["{DeviceID}"]
+        return self.deviceData[f"{DeviceID}"]
 
     async def getDevices(self):
 
