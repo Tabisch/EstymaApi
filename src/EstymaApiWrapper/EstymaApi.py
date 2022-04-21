@@ -3,6 +3,7 @@ from cgitb import text
 from http.client import responses
 import json
 import urllib.parse
+from xmlrpc.client import boolean
 import aiohttp
 import asyncio
 from time import time 
@@ -24,6 +25,8 @@ class EstymaApi:
         self.Password = urllib.parse.quote(Password)
         self.Devices = None
 
+        self._initialized = False
+
         self.deviceData = None
 
         self.lastUpdated = None
@@ -31,9 +34,13 @@ class EstymaApi:
 
         self.session = None
 
+    @property
+    def initialized(self) -> bool:
+        return self._initialized
+
     async def initialize(self):
         self.session = aiohttp.ClientSession()
-        await self.login()
+        self.login()
         self.Devices = await self.getDevices()
 
 
