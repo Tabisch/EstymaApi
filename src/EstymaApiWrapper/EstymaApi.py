@@ -43,7 +43,7 @@ class EstymaApi:
         self.login()
         self.Devices = await self.getDevices()
 
-
+    #login to Api
     async def login(self):
         dataformated = self.logindDataBody.format(self.Username, self.Password)
 
