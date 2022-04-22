@@ -58,7 +58,7 @@ class EstymaApi:
 
         if(result.status == 302):
             self._initialized = True
-            self._returncode = result.status_code
+            self._returncode = result.status
             return
 
         raise Exception
