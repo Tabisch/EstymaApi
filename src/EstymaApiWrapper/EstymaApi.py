@@ -67,7 +67,7 @@ class EstymaApi:
     async def fetchDevicedatatask(self, deviceid):
         resp = await (await self.session.post(self.update_url.format(self.http_url), headers=self.headers, data=self.fetchDevicedataBody.format(deviceid), ssl=False)).json(content_type='text/html')
 
-        resp["deviceid"] = deviceid
+        resp["device_id"] = deviceid
 
         return resp
 
@@ -83,7 +83,7 @@ class EstymaApi:
         jsonobj = json.loads("{}")
 
         for response in responses:
-            jsonobj[f'{response["deviceid"]}'] = response
+            jsonobj[f'{response["device_id"]}'] = response
             
         self._lastUpdated = int(time.time())
 
@@ -116,7 +116,7 @@ class EstymaApi:
             for device in result["devices_list"]:
                 device_template = json.loads(f'{{"name": "{device["0"]}"}}')
 
-                output_json[f'{device["id"]}'] = device_template
+                output_json[f'{device["device_id"]}'] = device_template
 
         self.Devices = output_json
 
