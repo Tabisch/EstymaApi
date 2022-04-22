@@ -56,7 +56,7 @@ class EstymaApi:
 
         result = await self.session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False, ssl=False)
 
-        if(result.status_code == 302):
+        if(result.status == 302):
             self._initialized = True
             self._returncode = result.status_code
             return
