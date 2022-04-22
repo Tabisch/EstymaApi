@@ -53,11 +53,11 @@ class EstymaApi:
     async def login(self):
         dataformated = self.logindDataBody.format(self.Username, self.Password)
 
-        result = (await self.session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False, ssl=False)).json()
+        result = (await self.session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False, ssl=False)).status
 
-        if(result.status == 302):
+        if(result == 302):
             self._initialized = True
-            self._returncode = result.status
+            self._returncode = result
             return
 
         raise Exception
