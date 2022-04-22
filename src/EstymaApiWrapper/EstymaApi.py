@@ -5,7 +5,7 @@ import json
 import urllib.parse
 import aiohttp
 import asyncio
-from time import time 
+import time 
 
 class EstymaApi:
 
@@ -29,7 +29,7 @@ class EstymaApi:
 
         self._deviceData = None
 
-        self.lastUpdated = None
+        self._lastUpdated = 0
         self.scanInterval = scanInterval
 
         self.session = None
@@ -84,13 +84,13 @@ class EstymaApi:
         for response in responses:
             jsonobj[f'{response["deviceid"]}'] = response
 
-        self.lastUpdated = int(time())
+        self._lastUpdated = int(time.time())
 
         self._deviceData = self.translateApiOutput(json.loads(json.dumps(jsonobj)))
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
-        if(int(time) - 30 > self.lastUpdated):
+        if(int(time.time()) - 30 > self._lastUpdated):
             self.fetchDevicedata()
 
         if(DeviceID == None):
