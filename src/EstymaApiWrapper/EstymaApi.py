@@ -46,7 +46,7 @@ class EstymaApi:
     #login and get devices
     async def initialize(self):
         self.session = aiohttp.ClientSession()
-        self.login()
+        await self.login()
         self.Devices = await self.getDevices()
         await self.fetchDevicedata()
 
@@ -54,7 +54,7 @@ class EstymaApi:
     async def login(self):
         dataformated = self.logindDataBody.format(self.Username, self.Password)
 
-        result = self.session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False)
+        result = await self.session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False)
 
         if(result.status_code == 302):
             self._initialized = True
