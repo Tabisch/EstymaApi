@@ -18,7 +18,7 @@ class EstymaApi:
     
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     fetchDevicedataBody = "id_urzadzenia={0}"
-    logindDataBody = "login={0}&haslo={1}&zaloguj=Login"
+    loginDataBody = "login={0}&haslo={1}&zaloguj=Login"
 
     def __init__(self, Username, Password, scanInterval = 30):
         self.Username = urllib.parse.quote(Username)
@@ -36,11 +36,11 @@ class EstymaApi:
         self.session = None
 
     @property
-    def initialized(self) -> bool:
+    def initialized(self):
         return self._initialized
 
     @property
-    def returncode(self) -> bool:
+    def returncode(self):
         return self._returncode
 
     #login and get devices
@@ -52,7 +52,7 @@ class EstymaApi:
 
     #login to Api
     async def login(self):
-        dataformated = self.logindDataBody.format(self.Username, self.Password)
+        dataformated = self.loginDataBody.format(self.Username, self.Password)
 
         result = (await self.session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False, ssl=False)).status
 
