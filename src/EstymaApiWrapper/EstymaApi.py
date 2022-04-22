@@ -5,7 +5,8 @@ import json
 import urllib.parse
 import aiohttp
 import asyncio
-import time 
+import time
+import importlib.resources
 
 class EstymaApi:
 
@@ -64,7 +65,7 @@ class EstymaApi:
 
     #fetch data for all devices
     async def fetchDevicedatatask(self, deviceid):
-        resp = (await self.session.post(self.update_url.format(self.http_url), headers=self.headers, data=self.fetchDevicedataBody.format(deviceid), ssl=False)).json()
+        resp = await (await self.session.post(self.update_url.format(self.http_url), headers=self.headers, data=self.fetchDevicedataBody.format(deviceid), ssl=False)).json(content_type='text/html')
 
         resp["deviceid"] = deviceid
 
@@ -83,28 +84,31 @@ class EstymaApi:
 
         for response in responses:
             jsonobj[f'{response["deviceid"]}'] = response
-
+            
         self._lastUpdated = int(time.time())
 
-        self._deviceData = self.translateApiOutput(json.loads(json.dumps(jsonobj)))
+        #kinda scuffed translation but it works
+        self._deviceData = await self.translateApiOutput(json.dumps(jsonobj))
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
         if(int(time.time()) - 30 > self._lastUpdated):
             self.fetchDevicedata()
 
-        if(DeviceID == None):
-            return self._deviceData
+        data = json.loads(self._deviceData)
 
-        return self._deviceData[f'{DeviceID}']
+        if(DeviceID == None):
+            return data
+
+        return data[f'{DeviceID}']
 
     async def getDevices(self):
 
         #could be optimised maybe
         #ripped this stright from the brup suite, works for now so i dont care
-        data = payload='sEcho=1&iColumns=8&sColumns=&iDisplayStart=0&iDisplayLength=5&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&mDataProp_5=5&mDataProp_6=6&mDataProp_7=7&sSearch=&bRegex=false&sSearch_0=&bRegex_0=false&bSearchable_0=true&sSearch_1=&bRegex_1=false&bSearchable_1=true&sSearch_2=&bRegex_2=false&bSearchable_2=true&sSearch_3=&bRegex_3=false&bSearchable_3=true&sSearch_4=&bRegex_4=false&bSearchable_4=true&sSearch_5=&bRegex_5=false&bSearchable_5=true&sSearch_6=&bRegex_6=false&bSearchable_6=true&sSearch_7=&bRegex_7=false&bSearchable_7=true&iSortingCols=1&iSortCol_0=0&sSortDir_0=asc&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=false&bSortable_4=false&bSortable_5=false&bSortable_6=false&bSortable_7=false&sByUserName='
+        data = 'sEcho=1&iColumns=8&sColumns=&iDisplayStart=0&iDisplayLength=5&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&mDataProp_5=5&mDataProp_6=6&mDataProp_7=7&sSearch=&bRegex=false&sSearch_0=&bRegex_0=false&bSearchable_0=true&sSearch_1=&bRegex_1=false&bSearchable_1=true&sSearch_2=&bRegex_2=false&bSearchable_2=true&sSearch_3=&bRegex_3=false&bSearchable_3=true&sSearch_4=&bRegex_4=false&bSearchable_4=true&sSearch_5=&bRegex_5=false&bSearchable_5=true&sSearch_6=&bRegex_6=false&bSearchable_6=true&sSearch_7=&bRegex_7=false&bSearchable_7=true&iSortingCols=1&iSortCol_0=0&sSortDir_0=asc&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=false&bSortable_4=false&bSortable_5=false&bSortable_6=false&bSortable_7=false&sByUserName='
 
-        result = (await self.session.post(self.devicelist_url.format(self.http_url),data=data , headers=self.headers, ssl=False)).json()
+        result = await (await self.session.post(self.devicelist_url.format(self.http_url),data=data , headers=self.headers, ssl=False)).json(content_type='text/html')
 
         output_json = json.loads('{}')
 
@@ -116,11 +120,14 @@ class EstymaApi:
 
         self.Devices = output_json
 
-    #function to translate the api respone from fetchDevicedata
+    #function to translate the api response from fetchDevicedata
     async def translateApiOutput(self,input):
-        translationTable = json.load(open('api_translation_table.json'))
+        translationTable = ""
 
-        translated_json = input
+        with importlib.resources.open_text("EstymaApiWrapper", 'api_translation_table.json') as file:
+            translationTable = json.load(file) 
+
+        translated_json = json.dumps(input)
 
         #somewhat scuffed way to translate all the json keys, but have no clue how to do it another way
         for inputkey in list(translationTable.keys()):
