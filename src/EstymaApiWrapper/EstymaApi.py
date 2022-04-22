@@ -46,7 +46,7 @@ class EstymaApi:
     async def initialize(self):
         self.session = aiohttp.ClientSession()
         await self.login()
-        self.Devices = await self.getDevices()
+        await self.getDevices()
         await self.fetchDevicedata()
 
     #login to Api
@@ -114,7 +114,7 @@ class EstymaApi:
 
                 output_json[f'{device["id"]}'] = device_template
 
-        return output_json
+        self.Devices = output_json
 
     #function to translate the api respone from fetchDevicedata
     async def translateApiOutput(self,input):
