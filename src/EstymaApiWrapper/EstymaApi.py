@@ -118,7 +118,7 @@ class EstymaApi:
             for device in result["devices_list"]:
                 device_template = json.loads(f'{{"name": "{device["0"]}"}}')
 
-                output_json[f'{device["device_id"]}'] = device_template
+                output_json[f'{device["id"]}'] = device_template
 
         self.Devices = output_json
 
