@@ -61,6 +61,8 @@ class EstymaApi:
             self._returncode = result
             return
 
+        self._returncode = result
+
         raise Exception
 
     #fetch data for all devices
