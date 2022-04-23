@@ -15,12 +15,13 @@ class EstymaApi:
     login_url = "https://{0}/login"
     update_url = "https://{0}/info_panel_update"
     devicelist_url = "https://{0}/main_panel/get_user_device_list"
+    languageSwitch_url = "https://{0}/switchLanguage/{1}}"
     
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     fetchDevicedataBody = "id_urzadzenia={0}"
     loginDataBody = "login={0}&haslo={1}&zaloguj=Login"
 
-    def __init__(self, Username, Password, scanInterval = 30):
+    def __init__(self, Username, Password, scanInterval = 30, language = "english"):
         self.Username = urllib.parse.quote(Username)
         self.Password = urllib.parse.quote(Password)
         self.Devices = None
@@ -34,6 +35,7 @@ class EstymaApi:
         self.scanInterval = scanInterval
 
         self.session = None
+        self._language = language
 
     @property
     def initialized(self):
@@ -47,6 +49,7 @@ class EstymaApi:
     async def initialize(self):
         self.session = aiohttp.ClientSession()
         await self.login()
+        await self.switchLanguage(self._language)
         await self.getDevices()
         await self.fetchDevicedata()
 
@@ -136,3 +139,16 @@ class EstymaApi:
             translated_json =  translated_json.replace(inputkey, translationTable[inputkey])
 
         return json.loads(translated_json)
+
+    async def switchLanguage(self, targetLanguage):
+        languageTable = None
+
+        with importlib.resources.open_text("EstymaApiWrapper", 'languageTable.json') as file:
+            languageTable = json.load(file)
+
+        url = self.login_url.format(self.http_url, languageTable[targetLanguage], allow_redirects=False, ssl=False)
+
+        if((await self.session.get(url)).status == 302):
+            return
+
+        raise Exception
