@@ -72,7 +72,9 @@ class EstymaApi:
     #fetch data for all devices
     async def fetchDevicedatatask(self, deviceid):
         resp = await (await self.session.post(self.update_url.format(self.http_url), headers=self.headers, data=self.fetchDevicedataBody.format(deviceid), ssl=False)).json(content_type='text/html')
-
+        resp["licznik_paliwa_sub1"] = int(str(resp["licznik_paliwa_sub1"])[:-1])
+        resp["daystats_data"]["consumption_fuel_end_of_last_day"] = int(str(resp["daystats_data"]["consumption_fuel_end_of_last_day"])[:-1])
+        resp["consumption_fuel_current_day"] = resp["licznik_paliwa_sub1"] - resp["daystats_data"]["consumption_fuel_end_of_last_day"]
         resp["device_id"] = deviceid
 
         return resp
