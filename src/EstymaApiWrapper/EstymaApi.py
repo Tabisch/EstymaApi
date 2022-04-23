@@ -103,7 +103,7 @@ class EstymaApi:
     async def getDeviceData(self, DeviceID = None):
         if(int(time.time()) - 30 > self._lastUpdated):
             if(self._updatingdata == False):
-                self.fetchDevicedata()
+                await self.fetchDevicedata()
 
         data = json.loads(self._deviceData)
 
