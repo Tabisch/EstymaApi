@@ -28,6 +28,7 @@ class EstymaApi:
 
         self._initialized = False
         self._returncode = "None"
+        self._updatingdata = False
 
         self._deviceData = None
 
@@ -78,6 +79,8 @@ class EstymaApi:
 
     #init data fetching
     async def fetchDevicedata(self):
+        self._updatingdata = True
+
         tasks = []
 
         for deviceid in list(self.Devices.keys()):
@@ -91,6 +94,7 @@ class EstymaApi:
             jsonobj[f'{response["device_id"]}'] = response
             
         self._lastUpdated = int(time.time())
+        self._updatingdata = False
 
         #kinda scuffed translation but it works
         self._deviceData = await self.translateApiOutput(json.dumps(jsonobj))
@@ -98,7 +102,8 @@ class EstymaApi:
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
         if(int(time.time()) - 30 > self._lastUpdated):
-            self.fetchDevicedata()
+            if(self._updatingdata == False):
+                self.fetchDevicedata()
 
         data = json.loads(self._deviceData)
 
