@@ -34,7 +34,7 @@
     "palnik_zgoda_na_prace_sub1": "burner_enabled_sub1",
     "kociol_tryb_sub1": "operation_mode_boiler_sub1",
     "on_off_sub1": "status_controller_sub1",
-    "cwu_zagrzej_teraz_sub1": "?cwu_heat_now_sub1",
+    "cwu_zagrzej_teraz_sub1": "cwu_heat_now_sub1",
     "tpok_komf_obw1_sub1": "target_temp_room_comf_heating_curcuit_sub1",
     "tpok_komf_obw1_sub3": "target_temp_room_comf_heating_curcuit_sub3",
     "tpok_komf_obw1_sub4": "target_temp_room_comf_heating_curcuit_sub4",
