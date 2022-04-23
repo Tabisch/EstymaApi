@@ -146,9 +146,9 @@ class EstymaApi:
         with importlib.resources.open_text("EstymaApiWrapper", 'languageTable.json') as file:
             languageTable = json.load(file)
 
-        url = self.login_url.format(self.http_url, languageTable[targetLanguage], allow_redirects=False, ssl=False)
+        url = self.login_url.format(self.http_url, languageTable[targetLanguage])
 
-        if((await self.session.get(url)).status == 302):
+        if((await self.session.get(url, allow_redirects=False, ssl=False)).status == 302):
             return
 
         raise Exception
