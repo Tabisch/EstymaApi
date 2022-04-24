@@ -128,7 +128,11 @@ class EstymaApi:
     async def getDeviceData(self, DeviceID = None):
         if((int(time.time()) - self._scanInterval) > self._lastUpdated):
             if(self._updatingdata == False):
-                await self.fetchDevicedata()
+                try:
+                    await self.fetchDevicedata()
+                except:
+                    await self.relog()
+                    await self.fetchDevicedata()
 
         data = json.loads(self._deviceData)
 
