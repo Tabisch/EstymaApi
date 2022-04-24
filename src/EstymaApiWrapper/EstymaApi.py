@@ -13,6 +13,7 @@ class EstymaApi:
     http_url = "igneo.pl"
 
     login_url = "https://{0}/login"
+    login_url = "https://{0}/logout"
     update_url = "https://{0}/info_panel_update"
     devicelist_url = "https://{0}/main_panel/get_user_device_list"
     languageSwitch_url = "https://{0}/switchLanguage/{1}}"
@@ -27,11 +28,13 @@ class EstymaApi:
         self.Devices = None
 
         self._initialized = False
+        self._loggedIn = False
+        self._loginTime = 0
         self._returncode = "None"
-        self._updatingdata = False
 
         self._deviceData = None
 
+        self._updatingdata = False
         self._lastUpdated = 0
         self.scanInterval = scanInterval
 
@@ -62,12 +65,25 @@ class EstymaApi:
 
         if(result == 302):
             self._initialized = True
+            self._loggedIn = True
+            self._loginTime = int(time.time())
             self._returncode = result
             return
 
         self._returncode = result
 
         raise Exception
+
+    async def logout(self):
+        if((await self.session.get(self.login_url.format(self.http_url), allow_redirects=False, ssl=False)).status == 302):
+            self._loggedIn = False
+            return
+        
+        raise Exception
+
+    async def relog(self):
+        await self.logout()
+        await self.login()
 
     #fetch data for all devices
     async def fetchDevicedatatask(self, deviceid):
@@ -81,6 +97,9 @@ class EstymaApi:
 
     #init data fetching
     async def fetchDevicedata(self):
+        if(int(time.time()) - 3600 > self._loginTime):
+            await self.relog()
+
         self._updatingdata = True
 
         tasks = []
