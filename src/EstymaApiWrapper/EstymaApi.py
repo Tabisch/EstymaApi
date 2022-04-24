@@ -13,7 +13,7 @@ class EstymaApi:
     http_url = "igneo.pl"
 
     login_url = "https://{0}/login"
-    login_url = "https://{0}/logout"
+    logout_url = "https://{0}/logout"
     update_url = "https://{0}/info_panel_update"
     devicelist_url = "https://{0}/main_panel/get_user_device_list"
     languageSwitch_url = "https://{0}/switchLanguage/{1}}"
@@ -36,7 +36,7 @@ class EstymaApi:
 
         self._updatingdata = False
         self._lastUpdated = 0
-        self.scanInterval = scanInterval
+        self._scanInterval = scanInterval
 
         self.session = None
         self._language = language
@@ -75,7 +75,7 @@ class EstymaApi:
         raise Exception
 
     async def logout(self):
-        if((await self.session.get(self.login_url.format(self.http_url), allow_redirects=False, ssl=False)).status == 302):
+        if((await self.session.get(self.logout_url.format(self.http_url), allow_redirects=False, ssl=False)).status == 302):
             self._loggedIn = False
             return
         
@@ -122,7 +122,7 @@ class EstymaApi:
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
-        if(int(time.time()) - 30 > self._lastUpdated):
+        if(int(time.time()) - self._scanInterval > self._lastUpdated):
             if(self._updatingdata == False):
                 await self.fetchDevicedata()
 
