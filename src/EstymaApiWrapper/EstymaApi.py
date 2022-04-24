@@ -22,7 +22,7 @@ class EstymaApi:
     fetchDevicedataBody = "id_urzadzenia={0}"
     loginDataBody = "login={0}&haslo={1}&zaloguj=Login"
 
-    def __init__(self, Email, Password, scanInterval = 30, language = "english"):
+    def __init__(self, Email: str, Password: str, scanInterval = 30, language: str = "english"):
         self._Email = urllib.parse.quote(Email)
         self._Password = urllib.parse.quote(Password)
         self._devices = None
@@ -156,7 +156,7 @@ class EstymaApi:
         self._devices = output_json
 
     #function to translate the api response from fetchDevicedata
-    async def translateApiOutput(self,input):
+    async def translateApiOutput(self,input: str):
         translationTable = ""
 
         with importlib.resources.open_text("EstymaApiWrapper", 'api_translation_table.json') as file:
@@ -170,13 +170,13 @@ class EstymaApi:
 
         return json.loads(translated_json)
 
-    async def switchLanguage(self, targetLanguage):
+    async def switchLanguage(self, targetLanguage: str):
         languageTable = None
 
         with importlib.resources.open_text("EstymaApiWrapper", 'languageTable.json') as file:
             languageTable = json.load(file)
 
-        url = self.login_url.format(self.http_url, languageTable[targetLanguage])
+        url = self.login_url.format(self.http_url, languageTable[targetLanguage.lower()])
 
         if((await self._session.get(url, allow_redirects=False, ssl=False)).status == 302):
             return
