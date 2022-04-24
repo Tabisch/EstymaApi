@@ -97,7 +97,7 @@ class EstymaApi:
 
     #init data fetching
     async def fetchDevicedata(self):
-        if(int(time.time()) - 3600 > self._loginTime):
+        if((int(time.time()) - 3600) > self._loginTime):
             await self.relog()
 
         self._updatingdata = True
