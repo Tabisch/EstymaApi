@@ -39,7 +39,7 @@
     "tpok_komf_obw1_sub3": "target_temp_room_comf_heating_curcuit_sub3",
     "tpok_komf_obw1_sub4": "target_temp_room_comf_heating_curcuit_sub4",
     "tpok_eko_obw1_sub1": "target_temp_room_eco_heating_curcuit_sub1",
-    "tpok_eko_obw1_sub3": "target_temp_room_eco_heating_curcuit_sub2",
+    "tpok_eko_obw1_sub3": "target_temp_room_eco_heating_curcuit_sub3",
     "tpok_eko_obw1_sub4": "target_temp_room_eco_heating_curcuit_sub4",
     "co_prog_obw1_sub1": "heating_curcuit_prog_obw1_sub1",
     "bufor_temp_zad_gor_sub1": "target_temp_buffer_top_sub1",
