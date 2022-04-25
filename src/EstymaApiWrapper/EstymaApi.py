@@ -55,7 +55,6 @@ class EstymaApi:
 
     #login and get devices
     async def initialize(self):
-        self._session = aiohttp.ClientSession()
         await self.login()
         await self.switchLanguage(self._language)
         await self.getDevices()
@@ -63,6 +62,8 @@ class EstymaApi:
 
     #login to Api
     async def login(self):
+        self._session = aiohttp.ClientSession()
+
         dataformated = self.loginDataBody.format(self._Email, self._Password)
 
         result = (await self._session.post(self.login_url.format(self.http_url), headers=self.headers, data=dataformated, allow_redirects=False, ssl=False)).status
@@ -88,6 +89,7 @@ class EstymaApi:
     async def relog(self):
         await self.logout()
         await self.login()
+        await self.switchLanguage(self._language)
 
     #fetch data for all devices
     async def fetchDevicedatatask(self, deviceid):
