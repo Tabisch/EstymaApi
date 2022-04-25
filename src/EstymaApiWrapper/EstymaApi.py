@@ -184,7 +184,4 @@ class EstymaApi:
 
         url = self.login_url.format(self.http_url, languageTable[targetLanguage.lower()])
 
-        if((await self._session.get(url, allow_redirects=False, ssl=False)).status == 302):
-            return
-
-        raise Exception
+        await self._session.get(url, allow_redirects=False, ssl=False)
