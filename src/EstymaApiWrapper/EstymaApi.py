@@ -103,10 +103,10 @@ class EstymaApi:
 
     #init data fetching
     async def fetchDevicedata(self):
+        self._updatingdata = True
+
         if((int(time.time()) - 3600) > self._loginTime):
             await self.relog()
-
-        self._updatingdata = True
 
         tasks = []
 
@@ -134,7 +134,8 @@ class EstymaApi:
                     await self.fetchDevicedata()
                 except:
                     await self.relog()
-                    await self.fetchDevicedata()
+                    self._updatingdata = False
+                    return
 
         data = json.loads(self._deviceData)
 
