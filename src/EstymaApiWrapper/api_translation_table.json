@@ -12,7 +12,7 @@
     "kociol_temp_obli_sub1": "temp_boiler_obli_sub1",
     "kociol_temp_spalin_sub1": "temp_exhaust_boiler_sub1",
     "spaliny_tlen_sub1": "oxygen_content_exhaust_sub1",
-    "palnik_status_sub1": "status_burner_current_sub1",
+    "palnik_status_sub1": "current_status_burner_sub1",
     "ilosc_paliwa_zbiornik_sub1": "fuel_fill_level_sub1",
     "temp_zewnetrzna_sub1": "temp_outside_sub1",
     "licznik_energii_sub1": "energy_meter_sub1",
