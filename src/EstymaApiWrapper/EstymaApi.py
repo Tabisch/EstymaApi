@@ -1,6 +1,3 @@
-from asyncio import tasks
-from cgitb import text
-from http.client import responses
 import json
 import urllib.parse
 import aiohttp
@@ -30,7 +27,6 @@ class EstymaApi:
         self._initialized = False
         self._loggedIn = False
         self._loginTime = 0
-        self._returncode = "None"
 
         self._deviceData = None
 
@@ -46,22 +42,32 @@ class EstymaApi:
         return self._initialized
 
     @property
-    def returncode(self):
-        return self._returncode
+    def loggedIn(self):
+        return self._loggedIn
 
     @property
     def devices(self):
         return self._devices
 
+    @property
+    def updatingData(self):
+        return self._updatingdata
+
     #login and get devices
-    async def initialize(self):
-        await self.login()
-        await self.switchLanguage(self._language)
-        await self.getDevices()
-        await self.fetchDevicedata()
+    async def initialize(self, throw_Execetion = True):
+        try:
+            await self._login()
+            await self.switchLanguage(self._language)
+            await self._fetchDevices()
+            await self._fetchDevicedata()
+        except:
+            if(throw_Execetion):
+                raise Exception
+
+        return self.initialized
 
     #login to Api
-    async def login(self):
+    async def _login(self):
         self._session = aiohttp.ClientSession()
 
         dataformated = self.loginDataBody.format(self._Email, self._Password)
@@ -72,27 +78,29 @@ class EstymaApi:
             self._initialized = True
             self._loggedIn = True
             self._loginTime = int(time.time())
-            self._returncode = result
             return
-
-        self._returncode = result
 
         raise Exception
 
-    async def logout(self):
-        if((await self._session.get(self.logout_url.format(self.http_url), allow_redirects=False, ssl=False)).status == 302):
-            self._loggedIn = False
-            return
-        
-        raise Exception
+    async def _logout(self):
+        self._loggedIn = False
 
-    async def relog(self):
-        await self.logout()
-        await self.login()
-        await self.switchLanguage(self._language)
+        try:
+            if((await self._session.get(self.logout_url.format(self.http_url), allow_redirects=False, ssl=False)).status == 302):
+                return
+        except:
+            return
+
+    async def _relog(self):
+        try:
+            await self._logout()
+            await self._login()
+            await self.switchLanguage(self._language)
+        except:
+            return
 
     #fetch data for all devices
-    async def fetchDevicedatatask(self, deviceid):
+    async def _fetchDevicedatatask(self, deviceid):
         resp = await (await self._session.post(self.update_url.format(self.http_url), headers=self.headers, data=self.fetchDevicedataBody.format(deviceid), ssl=False)).json(content_type='text/html')
         resp["licznik_paliwa_sub1"] = int(str(resp["licznik_paliwa_sub1"])[:-1])
         resp["daystats_data"]["pierwszy_pomiar_paliwa"] = int(str(resp["daystats_data"]["pierwszy_pomiar_paliwa"])[:-1])
@@ -102,16 +110,16 @@ class EstymaApi:
         return resp
 
     #init data fetching
-    async def fetchDevicedata(self):
+    async def _fetchDevicedata(self):
         self._updatingdata = True
 
         if((int(time.time()) - 3600) > self._loginTime):
-            await self.relog()
+            await self._relog()
 
         tasks = []
 
         for deviceid in list(self._devices.keys()):
-            tasks.append(self.fetchDevicedatatask(deviceid))
+            tasks.append(self._fetchDevicedatatask(deviceid))
 
         responses = await asyncio.gather(*tasks)
 
@@ -124,16 +132,19 @@ class EstymaApi:
         self._updatingdata = False
 
         #kinda scuffed translation but it works
-        self._deviceData = await self.translateApiOutput(json.dumps(jsonobj))
+        self._deviceData = await self._translateApiOutput(json.dumps(jsonobj))
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
+        if(self.initialized == False):
+            raise Exception
+
         if((int(time.time()) - self._scanInterval) > self._lastUpdated):
             if(self._updatingdata == False):
                 try:
-                    await self.fetchDevicedata()
+                    await self._fetchDevicedata()
                 except:
-                    await self.relog()
+                    await self._relog()
                     self._updatingdata = False
                     return
 
@@ -144,7 +155,7 @@ class EstymaApi:
 
         return data[f'{DeviceID}']
 
-    async def getDevices(self):
+    async def _fetchDevices(self):
 
         #could be optimised maybe
         #ripped this stright from the brup suite, works for now so i dont care
@@ -162,8 +173,8 @@ class EstymaApi:
 
         self._devices = output_json
 
-    #function to translate the api response from fetchDevicedata
-    async def translateApiOutput(self,input: str):
+    #function to translate the api response from _fetchDevicedata
+    async def _translateApiOutput(self,input: str):
         translationTable = ""
 
         with importlib.resources.open_text("EstymaApiWrapper", 'api_translation_table.json') as file:
@@ -178,6 +189,9 @@ class EstymaApi:
         return json.loads(translated_json)
 
     async def switchLanguage(self, targetLanguage: str):
+        if(self.initialized == False):
+            raise Exception
+
         languageTable = None
 
         with importlib.resources.open_text("EstymaApiWrapper", 'languageTable.json') as file:
