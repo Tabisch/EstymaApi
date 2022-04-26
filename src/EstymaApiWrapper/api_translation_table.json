@@ -25,7 +25,7 @@
     "typ_urzadzenia_sub1": "device_type_sub1",
     "liczba_obw_co_sub1": "number_obw_heating_curcuit_sub1",
     "liczba_obw_cwu_sub1": "number_obw_cwu_sub1",
-    "number_buffers_sub1": "number_buffers_sub1",
+    "liczba_buforow_sub1": "number_buffers_sub1",
     "solary_tak_nie_sub1": "status_solar_connected_sub1",
     "lambda_tak_nie_sub1": "state_lamda_sub1",
     "kociol_temp_zad_sub1": "temp_boiler_target_sub1",
@@ -68,6 +68,5 @@
     "diff": "diff",
     "can_status": "can_status",
     "ilosc_alarmow": "number_of_alarms",
-    "_execution_time": "_execution_time",
-    "liczba_buforow_sub1": "count_buffers_sub1"
+    "_execution_time": "_execution_time"
 }
