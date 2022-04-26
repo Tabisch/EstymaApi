@@ -131,9 +131,9 @@ class EstymaApi:
         if((int(time.time()) - self._scanInterval) > self._lastUpdated):
             if(self._updatingdata == False):
                 try:
-                    self.fetchDevicedata()
+                    await self.fetchDevicedata()
                 except:
-                    self.relog()
+                    await self.relog()
                     self._updatingdata = False
                     return
 
