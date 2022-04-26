@@ -110,7 +110,7 @@ class EstymaApi:
         return resp
 
     #init data fetching
-    async def _fetchDevicedata(self):
+    async def _fetchDevicedata(self, translateData= True):
         self._updatingdata = True
 
         if((int(time.time()) - 3600) > self._loginTime):
@@ -131,8 +131,11 @@ class EstymaApi:
         self._lastUpdated = int(time.time())
         self._updatingdata = False
 
-        #kinda scuffed translation but it works
-        self._deviceData = await self._translateApiOutput(json.dumps(jsonobj))
+        if(translateData):
+            #kinda scuffed translation but it works
+            self._deviceData = await self._translateApiOutput(json.dumps(jsonobj))
+        else:
+            self._deviceData = jsonobj
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
