@@ -5,9 +5,7 @@ Summary: Wrapper for the EstymaApi
 Home-page: https://github.com/Tabisch/EstymaApi
 Author: Tabisch
 Author-email: tobithieman@gmail.com
-License: UNKNOWN
 Project-URL: Bug Tracker, https://github.com/Tabisch/EstymaApi/issues
-Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
@@ -21,4 +19,3 @@ This is a work in progess and will only include readind stuff from the api.
 Im building this to integrate our heating system into home assistant.
 
 https://github.com/Tabisch/Igneo_ha_integration
-
