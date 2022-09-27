@@ -6,6 +6,7 @@ src/EstymaApiWrapper/EstymaApi.py
 src/EstymaApiWrapper/__init__.py
 src/EstymaApiWrapper/api_translation_table.json
 src/EstymaApiWrapper/languageTable.json
+src/EstymaApiWrapper/settingsStates_translationTable.json
 src/EstymaApiWrapper.egg-info/PKG-INFO
 src/EstymaApiWrapper.egg-info/SOURCES.txt
 src/EstymaApiWrapper.egg-info/dependency_links.txt

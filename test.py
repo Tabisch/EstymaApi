@@ -5,20 +5,16 @@ import time
 from EstymaApiWrapper import EstymaApi
 
 async def testfunction():
-    deviceID = 4251681784
     cred = json.load(open("credentials.json"))
 
-    api = EstymaApi(Email= cred["username"], Password= cred["password"])
+    api = EstymaApi(Email= cred["email"], Password= cred["password"])
+
     await api.initialize()
 
-    deviceData = json.dumps(await api.getDeviceData(deviceID), indent= 4)
-
-    print(deviceData)
-
-    await api.changeSetting(deviceID=deviceID, settingName="temp_boiler_target_sub1",targetValue=60)
+    await api.changeSetting(deviceID=(list((await api.getDevices()).keys())[0]),settingName="temp_boiler_target_sub1",targetValue=61)
 
     while(True):
         print(await api.getSettingChangeState())
-        time.sleep(5)
+        time.sleep(10)
 
 asyncio.run(testfunction())

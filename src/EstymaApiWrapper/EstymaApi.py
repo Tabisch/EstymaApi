@@ -4,16 +4,20 @@ import aiohttp
 import asyncio
 import time
 import importlib.resources
+from bs4 import BeautifulSoup
+import re
 
 class EstymaApi:
     http_url = "igneo.pl"
 
     login_url = "https://{0}/login"
     logout_url = "https://{0}/logout"
+    deviceSettings_url = "https://{0}/device/{1}"
     update_url = "https://{0}/info_panel_update"
     changeSetting_url = "https://{0}/info_set_order"
     settingChangeState_url = "https://{0}/info_check_order"
     devicelist_url = "https://{0}/main_panel/get_user_device_list"
+
     languageSwitch_url = "https://{0}/switchLanguage/{1}}"
     
     headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
@@ -26,6 +30,7 @@ class EstymaApi:
         self._Email = urllib.parse.quote(Email)
         self._Password = urllib.parse.quote(Password)
         self._devices = None
+        self._availableSettings = json.loads("{}")
 
         self._initialized = False
         self._loggedIn = False
@@ -80,6 +85,7 @@ class EstymaApi:
             await self.switchLanguage(self._language)
             await self._fetchDevices()
             await self._fetchDevicedata()
+            await self._fetchAvailableDeviceSettings()
         except Exception as e:
             print(e)
             if(throw_Execetion):
@@ -158,6 +164,12 @@ class EstymaApi:
         else:
             self._deviceData = jsonobj
 
+    async def getDevices(self):
+        if(self.initialized == False):
+            raise Exception
+
+        return self._devices
+
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
         if(self.initialized == False):
@@ -201,8 +213,8 @@ class EstymaApi:
         translated_json = json.dumps(input)
 
         #somewhat scuffed way to translate all the json keys, but have no clue how to do it another way
-        for inputkey in list(self._translationTable.keys()):
-            translated_json =  translated_json.replace(inputkey, self._translationTable[inputkey])
+        for inputkey in list(self._translationTable["deviceState"].keys()):
+            translated_json =  translated_json.replace(inputkey, self._translationTable["deviceState"][inputkey])
 
         return json.loads(translated_json)
 
@@ -220,12 +232,15 @@ class EstymaApi:
         await self._makeRequest("get", url)
 
     #send request to change a Setting
-    async def changeSetting(self, deviceID: int, settingName: str, targetValue):
+    async def changeSetting(self, deviceID: int, settingName: str, targetValue: int):
         if((await self.getDeviceData(deviceID))[settingName] == targetValue):
             return
+
+        if(str(targetValue) not in self._availableSettings[f"{deviceID}"][settingName].keys()):
+            raise Exception
         
         settingNameTranslated = ""
-        for key, value in self._translationTable.items():
+        for key, value in self._translationTable["deviceState"].items():
              if value == settingName:
                 settingNameTranslated = key
 
@@ -242,22 +257,28 @@ class EstymaApi:
         #create key for stateChange if does not exist
         self._settingChangeState_list[deviceID][changeID] = {}
 
+        self._settingChangeState_list[deviceID][changeID]["settingName"] = settingName
         self._settingChangeState_list[deviceID][changeID]["targetValue"] = targetValue
         self._settingChangeState_list[deviceID][changeID]["state"] = ""
 
-    async def _handleSettingChangeRequest(self,deviceID: int, changeID: int, requestBody: str):
+    async def _handleSettingChangeRequest(self,deviceID: int, changeID: int):
+        requestBody=self.settingChangeStateBody.format(deviceID, changeID)
+
         returnobj = {}
         returnobj["deviceID"] = deviceID
         returnobj["changeID"] = changeID
 
+        state = ""
+
         #idk why but the request seam to fail like every second try so this is the best i can do for now
         while(True):
             try:
-                returnobj["state"] = await (await self._makeRequest("post", self.settingChangeState_url.format(self.http_url), data=requestBody)).text()
+                state = await (await self._makeRequest("post", self.settingChangeState_url.format(self.http_url), data=requestBody)).text()
                 break
             except:
                 pass
-        
+        returnobj["state"] = self._translationTable["settingChangeStates"][state]
+
         return returnobj
 
     #uodate all existing settings Changes
@@ -272,17 +293,27 @@ class EstymaApi:
 
         for deviceID in self._settingChangeState_list:
             for changeID in self._settingChangeState_list[deviceID]:
-                if(self._settingChangeState_list[deviceID][changeID]["state"] == "zrealizowano"):
+                if(self._settingChangeState_list[deviceID][changeID]["state"] == "completed"):
+                    self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
                     break
-                requestList.append(asyncio.ensure_future(self._handleSettingChangeRequest(deviceID= deviceID, changeID= changeID, requestBody=self.settingChangeStateBody.format(deviceID, changeID))))
+                if(self._settingChangeState_list[deviceID][changeID]["state"] == "failed"):
+                    self.changeSetting(deviceID=deviceID,settingName=self._settingChangeState_list[deviceID][changeID]["settingName"],targetValue=self._settingChangeState_list[deviceID][changeID]["targetValue"])
+                    self._settingChangeState_list[deviceID][changeID]["state"] = "rescheduled"
+                    break
+                if(self._settingChangeState_list[deviceID][changeID]["state"] == "rescheduled"):
+                    self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
+                    break
+                requestList.append(asyncio.ensure_future(self._handleSettingChangeRequest(deviceID= deviceID, changeID= changeID)))
 
         requestResults = await asyncio.gather(*requestList)
 
         for res in requestResults:
             self._settingChangeState_list[res["deviceID"]][res["changeID"]]["state"] = res["state"]
 
-
+    #get Current State of Settings Change
     async def getSettingChangeState(self, deviceNumber: int = None, changeID: int= None):
+        if(self.initialized == False):
+            raise Exception
 
         await self._updateAllsettingChangeStates()
 
@@ -292,3 +323,31 @@ class EstymaApi:
             return self._settingChangeState_list[deviceNumber]
         
         return self._settingChangeState_list
+
+    #generate a list of all available settings per device
+    async def _fetchAvailableDeviceSettings(self):
+        pattern = re.compile("[\w\d+]{1,}")
+
+        for deviceID in self._devices.keys():
+
+            self._availableSettings[deviceID] = {}
+
+            html = BeautifulSoup(await (await self._makeRequest("get", url=self.deviceSettings_url.format(self.http_url, deviceID))).text(), "html.parser")
+            selects = html.find_all("select")
+            for select in selects:
+                self._availableSettings[deviceID][select["name"]] = {}
+                for child in select.children:
+                    if(pattern.match(child.text)):
+                        self._availableSettings[deviceID][select["name"]][child["value"]] = child.text
+
+        self._availableSettings = await self._translateApiOutput(self._availableSettings)
+
+    #provide a list of available settings
+    async def getAvailableSettings(self, deviceID: int= None):
+        if(self.initialized == False):
+            raise Exception
+
+        if(deviceID):
+            return self._availableSettings[deviceID]
+
+        return self._availableSettings
