@@ -6,6 +6,7 @@ import time
 import importlib.resources
 from bs4 import BeautifulSoup
 import re
+from .CustomErrors import SettingNotAvailableException, SettingAlreadyHasTargetValue, ClientNotInitialized
 
 class EstymaApi:
     http_url = "igneo.pl"
@@ -166,14 +167,14 @@ class EstymaApi:
 
     async def getDevices(self):
         if(self.initialized == False):
-            raise Exception
+            raise ClientNotInitialized
 
         return self._devices
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None):
         if(self.initialized == False):
-            raise Exception
+            raise ClientNotInitialized
 
         if((int(time.time()) - self._scanInterval) > self._lastUpdated):
             if(self._updatingdata == False):
@@ -220,7 +221,7 @@ class EstymaApi:
 
     async def switchLanguage(self, targetLanguage: str):
         if(self.initialized == False):
-            raise Exception
+            raise ClientNotInitialized
 
         languageTable = None
 
@@ -233,11 +234,14 @@ class EstymaApi:
 
     #send request to change a Setting
     async def changeSetting(self, deviceID: int, settingName: str, targetValue: int):
+        if(self.initialized == False):
+            raise ClientNotInitialized
+
         if((await self.getDeviceData(deviceID))[settingName] == targetValue):
-            return
+            raise SettingAlreadyHasTargetValue
 
         if(str(targetValue) not in self._availableSettings[f"{deviceID}"][settingName].keys()):
-            raise Exception
+            raise SettingNotAvailableException
         
         settingNameTranslated = ""
         for key, value in self._translationTable["deviceState"].items():
@@ -295,6 +299,7 @@ class EstymaApi:
             for changeID in self._settingChangeState_list[deviceID]:
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "completed"):
                     self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
+                    self._fetchAvailableDeviceSettings()
                     break
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "failed"):
                     self.changeSetting(deviceID=deviceID,settingName=self._settingChangeState_list[deviceID][changeID]["settingName"],targetValue=self._settingChangeState_list[deviceID][changeID]["targetValue"])
@@ -313,7 +318,7 @@ class EstymaApi:
     #get Current State of Settings Change
     async def getSettingChangeState(self, deviceNumber: int = None, changeID: int= None):
         if(self.initialized == False):
-            raise Exception
+            raise ClientNotInitialized
 
         await self._updateAllsettingChangeStates()
 
@@ -338,14 +343,19 @@ class EstymaApi:
                 self._availableSettings[deviceID][select["name"]] = {}
                 for child in select.children:
                     if(pattern.match(child.text)):
-                        self._availableSettings[deviceID][select["name"]][child["value"]] = child.text
-
+                        self._availableSettings[deviceID][select["name"]][child["value"]] = {}
+                        self._availableSettings[deviceID][select["name"]][child["value"]]["name"] = child.text
+                        if("selected" in child.attrs.keys()):
+                            self._availableSettings[deviceID][select["name"]][child["value"]]["selected"] = True
+                        else:
+                            self._availableSettings[deviceID][select["name"]][child["value"]]["selected"] = False
+                        
         self._availableSettings = await self._translateApiOutput(self._availableSettings)
 
     #provide a list of available settings
     async def getAvailableSettings(self, deviceID: int= None):
         if(self.initialized == False):
-            raise Exception
+            raise ClientNotInitialized
 
         if(deviceID):
             return self._availableSettings[deviceID]
