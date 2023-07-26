@@ -2,6 +2,8 @@ LICENSE
 README.md
 pyproject.toml
 setup.cfg
+setup.py
+src/EstymaApiWrapper/CustomErrors.py
 src/EstymaApiWrapper/EstymaApi.py
 src/EstymaApiWrapper/__init__.py
 src/EstymaApiWrapper/api_translation_table.json

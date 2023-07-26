@@ -11,6 +11,8 @@ async def testfunction():
 
     await api.initialize()
 
-    print(await api.getAvailableSettings())
+    print(json.dumps(await api.getDeviceData("4251681784"), indent=4))
+
+    await api._logout()
 
 asyncio.run(testfunction())
