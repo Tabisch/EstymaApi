@@ -27,7 +27,9 @@ class EstymaApi:
     changeSettingBody = "id_urzadzenia={0}&name={1}&value={2}"
     settingChangeStateBody = "id_urzadzenia={0}&order_number={1}"
 
-    def __init__(self, Email: str, Password: str, scanInterval = 30, language: str = "english"):
+    updateDiffRegex = r"(\d+)d (\d+)h:(\d+)m:(\d+)s"
+
+    def __init__(self, Email: str, Password: str, scanInterval = 30, language: str = "english", staleDataThresholdSeconds: int = 300):
         self._Email = urllib.parse.quote(Email)
         self._Password = urllib.parse.quote(Password)
         self._devices = None
@@ -37,6 +39,8 @@ class EstymaApi:
         self._loggedIn = False
         self._loginTime = 0
         self._loginTimeLimit = 3600
+
+        self._staleDataThresholdSeconds = staleDataThresholdSeconds
 
         self._deviceData = None
 
@@ -133,9 +137,29 @@ class EstymaApi:
         resp["licznik_paliwa_sub1"] = int(str(resp["licznik_paliwa_sub1"])[:-1])
         resp["daystats_data"]["pierwszy_pomiar_paliwa"] = int(str(resp["daystats_data"]["pierwszy_pomiar_paliwa"])[:-1])
         resp["consumption_fuel_current_day"] = resp["licznik_paliwa_sub1"] - resp["daystats_data"]["pierwszy_pomiar_paliwa"]
+        resp["online"]["diffSeconds"] = await self._calculateUpdateDiffSeconds(resp["online"]["diff"])
+        resp["online"]["staleData"] = await self._determineStaleData(resp["online"]["diffSeconds"])
         resp["device_id"] = deviceid
 
         return resp
+    
+    async def _determineStaleData(self, diffSeconds: int):
+        if diffSeconds > self._staleDataThresholdSeconds:
+            return True
+        else:
+            return False
+
+    async def _calculateUpdateDiffSeconds(self, diffString: str):
+        seconds = 0
+
+        dataSegments = re.search(self.updateDiffRegex, diffString)
+
+        seconds += int(dataSegments.group(1)) * 24 * 60 * 60
+        seconds += int(dataSegments.group(2)) * 60 * 60
+        seconds += int(dataSegments.group(3)) * 60
+        seconds += int(dataSegments.group(4))
+
+        return seconds
 
     #init data fetching
     async def _fetchDevicedata(self, translateData= True):
