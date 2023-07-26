@@ -118,10 +118,12 @@ class EstymaApi:
         self._loggedIn = False
 
         try:
-            if(await self._makeRequest("get", self.logout_url.format(self.http_url)).status == 302):
+            if((await self._makeRequest("get", self.logout_url.format(self.http_url))).status == 302):
                 return
         except:
             return
+        
+        return
 
     async def _relog(self):
         try:
@@ -138,13 +140,13 @@ class EstymaApi:
         resp["daystats_data"]["pierwszy_pomiar_paliwa"] = int(str(resp["daystats_data"]["pierwszy_pomiar_paliwa"])[:-1])
         resp["consumption_fuel_current_day"] = resp["licznik_paliwa_sub1"] - resp["daystats_data"]["pierwszy_pomiar_paliwa"]
         resp["online"]["diffSeconds"] = await self._calculateUpdateDiffSeconds(resp["online"]["diff"])
-        resp["staleData"] = await self._determineStaleData(resp["online"]["diffSeconds"])
+        resp["dataUpToDate"] = await self._determineDataUpToDate(resp["online"]["diffSeconds"])
         resp["device_id"] = deviceid
 
         return resp
     
-    async def _determineStaleData(self, diffSeconds: int):
-        if diffSeconds > self._staleDataThresholdSeconds:
+    async def _determineDataUpToDate(self, diffSeconds: int):
+        if diffSeconds < self._staleDataThresholdSeconds:
             return True
         else:
             return False
