@@ -138,7 +138,7 @@ class EstymaApi:
         resp["daystats_data"]["pierwszy_pomiar_paliwa"] = int(str(resp["daystats_data"]["pierwszy_pomiar_paliwa"])[:-1])
         resp["consumption_fuel_current_day"] = resp["licznik_paliwa_sub1"] - resp["daystats_data"]["pierwszy_pomiar_paliwa"]
         resp["online"]["diffSeconds"] = await self._calculateUpdateDiffSeconds(resp["online"]["diff"])
-        resp["online"]["staleData"] = await self._determineStaleData(resp["online"]["diffSeconds"])
+        resp["staleData"] = await self._determineStaleData(resp["online"]["diffSeconds"])
         resp["device_id"] = deviceid
 
         return resp
