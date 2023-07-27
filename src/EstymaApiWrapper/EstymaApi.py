@@ -323,10 +323,15 @@ class EstymaApi:
             for changeID in self._settingChangeState_list[deviceID]:
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "completed"):
                     self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
-                    self._fetchAvailableDeviceSettings()
+                    await self._fetchAvailableDeviceSettings()
                     break
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "failed"):
-                    self.changeSetting(deviceID=deviceID,settingName=self._settingChangeState_list[deviceID][changeID]["settingName"],targetValue=self._settingChangeState_list[deviceID][changeID]["targetValue"])
+                    try:
+                        await self.changeSetting(deviceID=deviceID,settingName=self._settingChangeState_list[deviceID][changeID]["settingName"],targetValue=self._settingChangeState_list[deviceID][changeID]["targetValue"])
+                    except SettingAlreadyHasTargetValue:
+                        print("Setting Already Has TargetValue")
+                        self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
+                        break
                     self._settingChangeState_list[deviceID][changeID]["state"] = "rescheduled"
                     break
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "rescheduled"):

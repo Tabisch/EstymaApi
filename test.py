@@ -11,7 +11,13 @@ async def testfunction():
 
     await api.initialize()
 
-    print(json.dumps(await api.getDeviceData("4251681784"), indent=4))
+    # print(json.dumps(await api.getDeviceData("4251681784"), indent=4))
+
+    await api.changeSetting(4251681784, "temp_boiler_target_sub1", 60)
+
+    while True:
+        print(await api.getSettingChangeState())
+        time.sleep(10)
 
     await api._logout()
 
