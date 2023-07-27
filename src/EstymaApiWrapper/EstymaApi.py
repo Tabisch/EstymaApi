@@ -42,7 +42,7 @@ class EstymaApi:
 
         self._staleDataThresholdSeconds = staleDataThresholdSeconds
 
-        self._deviceData = None
+        self._deviceData = "{}"
 
         self._updatingdata = False
         self._lastUpdated = 0
@@ -207,6 +207,7 @@ class EstymaApi:
                 except:
                     await self._relog()
                     self._updatingdata = False
+                    print("getDeviceData except")
                     return
 
         data = json.loads(self._deviceData)
@@ -328,11 +329,10 @@ class EstymaApi:
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "failed"):
                     try:
                         await self.changeSetting(deviceID=deviceID,settingName=self._settingChangeState_list[deviceID][changeID]["settingName"],targetValue=self._settingChangeState_list[deviceID][changeID]["targetValue"])
+                        self._settingChangeState_list[deviceID][changeID]["state"] = "rescheduled"
                     except SettingAlreadyHasTargetValue:
                         print("Setting Already Has TargetValue")
                         self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
-                        break
-                    self._settingChangeState_list[deviceID][changeID]["state"] = "rescheduled"
                     break
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "rescheduled"):
                     self._settingChangeState_list[deviceID].pop(f"{changeID}", None)

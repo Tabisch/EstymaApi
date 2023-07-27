@@ -13,7 +13,10 @@ async def testfunction():
 
     # print(json.dumps(await api.getDeviceData("4251681784"), indent=4))
 
-    await api.changeSetting(4251681784, "temp_boiler_target_sub1", 60)
+    try:
+        await api.changeSetting(4251681784, "temp_boiler_target_sub1", 61)
+    except:
+        await api.changeSetting(4251681784, "temp_boiler_target_sub1", 60)
 
     while True:
         print(await api.getSettingChangeState())
