@@ -43,6 +43,7 @@ class EstymaApi:
         self._staleDataThresholdSeconds = staleDataThresholdSeconds
 
         self._deviceData = "{}"
+        self._deviceDataValues = "{}"
 
         self._updatingdata = False
         self._lastUpdated = 0
@@ -89,8 +90,8 @@ class EstymaApi:
             await self._login()
             await self.switchLanguage(self._language)
             await self._fetchDevices()
-            await self._fetchDevicedata()
             await self._fetchAvailableDeviceSettings()
+            await self._fetchDevicedata()
         except Exception as e:
             print(e)
             if(throw_Execetion):
@@ -191,6 +192,8 @@ class EstymaApi:
         else:
             self._deviceData = jsonobj
 
+        self._deviceDataValues = json.dumps(await self._dataTextToValues(json.loads(self._deviceData)))
+
     async def getDevices(self):
         if(self.initialized == False):
             raise ClientNotInitialized
@@ -198,7 +201,7 @@ class EstymaApi:
         return self._devices
 
     #get data for device\devices
-    async def getDeviceData(self, DeviceID = None):
+    async def getDeviceData(self, DeviceID = None, textToValues: bool = False):
         if(self.initialized == False):
             raise ClientNotInitialized
 
@@ -211,7 +214,12 @@ class EstymaApi:
                     self._updatingdata = False
                     print("getDeviceData except. Delivering previous data.")
 
-        data = json.loads(self._deviceData)
+        data = ""
+
+        if textToValues:
+            data = json.loads(self._deviceData)
+        else:
+            data = json.loads(self._deviceDataValues)
 
         if(DeviceID == None):
             return data
@@ -244,6 +252,20 @@ class EstymaApi:
             translated_json =  translated_json.replace(inputkey, self._translationTable["deviceState"][inputkey])
 
         return json.loads(translated_json)
+    
+    async def _dataTextToValues(self,data: dict):
+        deviceSettings = await self.getAvailableSettings()
+
+        for device in data.keys():
+            for setting in data[device].keys():
+
+                if setting in deviceSettings[device].keys():
+
+                    for value in deviceSettings[device][setting].keys():
+                        if deviceSettings[device][setting][value]["name"] == data[device][setting]:
+                            data[device][setting] = value
+
+        return data
 
     async def switchLanguage(self, targetLanguage: str):
         if(self.initialized == False):

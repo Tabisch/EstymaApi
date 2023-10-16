@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: EstymaApiWrapper
-Version: 0.0.55
+Version: 0.0.59
 Summary: Wrapper for the EstymaApi
 Home-page: https://github.com/Tabisch/EstymaApi
 Author: Tabisch
@@ -15,9 +15,9 @@ License-File: LICENSE
 
 Wrapper for the EstymaApi Heating Systems
 
-This is a work in progess.
-At the moment the main pupose is reading data.
-Changing settings is working but still in a really early stage.
+This is a work in progess. ß
+At the moment the main pupose is reading data. \
+Changing settings is working but still in a really early stage. \
 Im building this to integrate our heating system into home assistant.
 
 https://github.com/Tabisch/Igneo_ha_integration
