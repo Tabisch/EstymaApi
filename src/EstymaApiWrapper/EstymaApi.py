@@ -209,8 +209,7 @@ class EstymaApi:
                 except:
                     await self._relog()
                     self._updatingdata = False
-                    print("getDeviceData except")
-                    return
+                    print("getDeviceData except. Delivering previous data.")
 
         data = json.loads(self._deviceData)
 
