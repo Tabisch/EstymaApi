@@ -120,6 +120,7 @@ class EstymaApi:
 
         try:
             if((await self._makeRequest("get", self.logout_url.format(self.http_url))).status == 302):
+                await self._session.close()
                 return
         except:
             return
@@ -347,7 +348,7 @@ class EstymaApi:
             for changeID in self._settingChangeState_list[deviceID]:
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "completed"):
                     self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
-                    await self._fetchAvailableDeviceSettings()
+                    #await self._fetchAvailableDeviceSettings()
                     break
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "failed"):
                     try:
@@ -413,3 +414,12 @@ class EstymaApi:
             return self._availableSettings[deviceID]
 
         return self._availableSettings
+    
+    async def isUpdating(self, deviceID:int, settingName:str):
+        await self.getSettingChangeState()
+
+        for id in self._settingChangeState_list[deviceID].keys():
+            if self._settingChangeState_list[deviceID][id]["settingName"] == settingName:
+                return True
+            
+        return False
