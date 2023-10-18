@@ -11,17 +11,20 @@ async def testfunction():
 
     await api.initialize()
 
-    f = open("dump_data.txt", "w")
-    f.write(json.dumps(await api.getDeviceData(), indent=4))
-    f.close()
+    try:
+        await api.changeSetting(4251681784, "status_controller_sub1", 1)
+    except:
+        await api.changeSetting(4251681784, "status_controller_sub1", 0)
 
-    f = open("dump_data_textToValues.txt", "w")
-    f.write(json.dumps(await api.getDeviceData(textToValues=True), indent=4))
-    f.close()
+    try:
+        await api.changeSetting(4251681784, "temp_boiler_target_sub1", 61)
+    except:
+        await api.changeSetting(4251681784, "temp_boiler_target_sub1", 60)
 
-    f = open("dump_settings.txt", "w")
-    f.write(json.dumps(await api.getAvailableSettings(), indent=4))
-    f.close()
+    while await api.isUpdating(4251681784):
+        print(await api.getSettingChangeState())
+        time.sleep(10)
+
     await api._logout()
 
 asyncio.run(testfunction())
