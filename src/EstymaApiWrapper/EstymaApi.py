@@ -264,7 +264,7 @@ class EstymaApi:
 
                     for value in deviceSettings[device][setting].keys():
                         if deviceSettings[device][setting][value]["name"] == data[device][setting]:
-                            data[device][setting] = value
+                            data[device][setting] = int(value)
 
         return data
 
@@ -286,7 +286,7 @@ class EstymaApi:
         if(self.initialized == False):
             raise ClientNotInitialized("Estyma API Client is not initialized")
 
-        if((await self.getDeviceData(deviceID))[settingName] == targetValue):
+        if((await self.getDeviceData(deviceID, textToValues=True))[settingName] == targetValue):
             raise SettingAlreadyHasTargetValue("Setting already has target value")
 
         if(str(targetValue) not in self._availableSettings[f"{deviceID}"][settingName].keys()):
@@ -415,10 +415,16 @@ class EstymaApi:
 
         return self._availableSettings
     
-    async def isUpdating(self, deviceID:int, settingName:str):
+    async def isUpdating(self, deviceID:int, settingName:str = ""):
         await self.getSettingChangeState()
 
-        if deviceID in self._settingChangeState_list.keys():
+        print(len(self._settingChangeState_list[deviceID].keys()))
+
+        if deviceID in self._settingChangeState_list.keys() and len(settingName) == 0:
+            if len(self._settingChangeState_list[deviceID].keys()) != 0:
+                return True
+
+        if deviceID in self._settingChangeState_list.keys() and len(settingName) != 0:
             for id in self._settingChangeState_list[deviceID].keys():
                 if self._settingChangeState_list[deviceID][id]["settingName"] == settingName:
                     return True
