@@ -218,9 +218,9 @@ class EstymaApi:
         data = ""
 
         if textToValues:
-            data = json.loads(self._deviceData)
-        else:
             data = json.loads(self._deviceDataValues)
+        else:
+            data = json.loads(self._deviceData)
 
         if(DeviceID == None):
             return data
