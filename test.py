@@ -11,17 +11,9 @@ async def testfunction():
 
     await api.initialize()
 
-    f = open("dump_data.txt", "w")
-    f.write(json.dumps(await api.getDeviceData(), indent=4))
-    f.close()
-
-    f = open("dump_data_textToValues.txt", "w")
-    f.write(json.dumps(await api.getDeviceData(textToValues=True), indent=4))
-    f.close()
-
-    f = open("dump_settings.txt", "w")
-    f.write(json.dumps(await api.getAvailableSettings(), indent=4))
-    f.close()
+    #while await api.isUpdating(4251681784, "temp_boiler_target_sub1"):
+    #    print(await api.getSettingChangeState())
+    #    time.sleep(10)
 
     await api._logout()
 

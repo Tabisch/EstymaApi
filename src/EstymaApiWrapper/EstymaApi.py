@@ -197,14 +197,14 @@ class EstymaApi:
 
     async def getDevices(self):
         if(self.initialized == False):
-            raise ClientNotInitialized
+            raise ClientNotInitialized("Estyma API Client is not initialized")
 
         return self._devices
 
     #get data for device\devices
     async def getDeviceData(self, DeviceID = None, textToValues: bool = False):
         if(self.initialized == False):
-            raise ClientNotInitialized
+            raise ClientNotInitialized("Estyma API Client is not initialized")
 
         if((int(time.time()) - self._scanInterval) > self._lastUpdated):
             if(self._updatingdata == False):
@@ -270,7 +270,7 @@ class EstymaApi:
 
     async def switchLanguage(self, targetLanguage: str):
         if(self.initialized == False):
-            raise ClientNotInitialized
+            raise ClientNotInitialized("Estyma API Client is not initialized")
 
         languageTable = None
 
@@ -284,13 +284,13 @@ class EstymaApi:
     #send request to change a Setting
     async def changeSetting(self, deviceID: int, settingName: str, targetValue: int):
         if(self.initialized == False):
-            raise ClientNotInitialized
+            raise ClientNotInitialized("Estyma API Client is not initialized")
 
         if((await self.getDeviceData(deviceID))[settingName] == targetValue):
-            raise SettingAlreadyHasTargetValue
+            raise SettingAlreadyHasTargetValue("Setting already has target value")
 
         if(str(targetValue) not in self._availableSettings[f"{deviceID}"][settingName].keys()):
-            raise SettingNotAvailableException
+            raise SettingNotAvailableException("The setting does not exist")
         
         settingNameTranslated = ""
         for key, value in self._translationTable["deviceState"].items():
@@ -371,7 +371,7 @@ class EstymaApi:
     #get Current State of Settings Change
     async def getSettingChangeState(self, deviceNumber: int = None, changeID: int= None):
         if(self.initialized == False):
-            raise ClientNotInitialized
+            raise ClientNotInitialized("Estyma API Client is not initialized")
 
         await self._updateAllsettingChangeStates()
 
@@ -408,7 +408,7 @@ class EstymaApi:
     #provide a list of available settings
     async def getAvailableSettings(self, deviceID: int= None):
         if(self.initialized == False):
-            raise ClientNotInitialized
+            raise ClientNotInitialized("Estyma API Client is not initialized")
 
         if(deviceID):
             return self._availableSettings[deviceID]
@@ -418,8 +418,9 @@ class EstymaApi:
     async def isUpdating(self, deviceID:int, settingName:str):
         await self.getSettingChangeState()
 
-        for id in self._settingChangeState_list[deviceID].keys():
-            if self._settingChangeState_list[deviceID][id]["settingName"] == settingName:
-                return True
+        if deviceID in self._settingChangeState_list.keys():
+            for id in self._settingChangeState_list[deviceID].keys():
+                if self._settingChangeState_list[deviceID][id]["settingName"] == settingName:
+                    return True
             
         return False
