@@ -1,4 +1,9 @@
     try:
+        await api.changeSetting(4251681784, "status_controller_sub1", 1)
+    except:
+        await api.changeSetting(4251681784, "status_controller_sub1", 0)
+
+    try:
         await api.changeSetting(4251681784, "temp_boiler_target_sub1", 61)
     except:
         await api.changeSetting(4251681784, "temp_boiler_target_sub1", 60)

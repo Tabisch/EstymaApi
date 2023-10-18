@@ -418,8 +418,6 @@ class EstymaApi:
     async def isUpdating(self, deviceID:int, settingName:str = ""):
         await self.getSettingChangeState()
 
-        print(len(self._settingChangeState_list[deviceID].keys()))
-
         if deviceID in self._settingChangeState_list.keys() and len(settingName) == 0:
             if len(self._settingChangeState_list[deviceID].keys()) != 0:
                 return True
