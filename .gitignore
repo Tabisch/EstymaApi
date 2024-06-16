@@ -2,3 +2,4 @@ dist/*
 dist
 build
 credentials.json
+venv/

@@ -9,6 +9,10 @@ async def testfunction():
 
     api = EstymaApi(Email= cred["email"], Password= cred["password"])
 
-    print(await api.testCredentials())
+    await api.initialize()
+
+    print(await api.isUpdating(4251681784, "temp_boiler_target_sub1"))
+
+    await api._logout()
 
 asyncio.run(testfunction())

@@ -1,0 +1,23 @@
+Metadata-Version: 2.1
+Name: EstymaApiWrapper
+Version: 0.0.66
+Summary: Wrapper for the EstymaApi
+Home-page: https://github.com/Tabisch/EstymaApi
+Author: Tabisch
+Author-email: tobithieman@gmail.com
+Project-URL: Bug Tracker, https://github.com/Tabisch/EstymaApi/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+Wrapper for the EstymaApi Heating Systems
+
+This is a work in progess. \
+At the moment the main pupose is reading data. \
+Changing settings is working but still in a really early stage. \
+Im building this to integrate our heating system into home assistant.
+
+https://github.com/Tabisch/Igneo_ha_integration

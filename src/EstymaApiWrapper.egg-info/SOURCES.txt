@@ -1,0 +1,14 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+setup.py
+src/EstymaApiWrapper/CustomErrors.py
+src/EstymaApiWrapper/EstymaApi.py
+src/EstymaApiWrapper/__init__.py
+src/EstymaApiWrapper/api_translation_table.json
+src/EstymaApiWrapper/languageTable.json
+src/EstymaApiWrapper.egg-info/PKG-INFO
+src/EstymaApiWrapper.egg-info/SOURCES.txt
+src/EstymaApiWrapper.egg-info/dependency_links.txt
+src/EstymaApiWrapper.egg-info/top_level.txt

@@ -93,7 +93,7 @@ class EstymaApi:
             await self._fetchAvailableDeviceSettings()
             await self._fetchDevicedata()
         except Exception as e:
-            print(e)
+            #print(e)
             if(throw_Execetion):
                 raise Exception
 
@@ -126,6 +126,18 @@ class EstymaApi:
             return
         
         return
+    
+    async def testCredentials(self):
+        result = False
+
+        try:
+            await self._login()
+            await self._logout()
+            result = True
+        except:
+            await self._session.close()
+
+        return result
 
     async def _relog(self):
         try:
@@ -213,7 +225,7 @@ class EstymaApi:
                 except:
                     await self._relog()
                     self._updatingdata = False
-                    print("getDeviceData except. Delivering previous data.")
+                    #print("getDeviceData except. Delivering previous data.")
 
         data = ""
 
@@ -355,7 +367,7 @@ class EstymaApi:
                         await self.changeSetting(deviceID=deviceID,settingName=self._settingChangeState_list[deviceID][changeID]["settingName"],targetValue=self._settingChangeState_list[deviceID][changeID]["targetValue"])
                         self._settingChangeState_list[deviceID][changeID]["state"] = "rescheduled"
                     except SettingAlreadyHasTargetValue:
-                        print("Setting Already Has TargetValue")
+                        #print("Setting Already Has TargetValue")
                         self._settingChangeState_list[deviceID].pop(f"{changeID}", None)
                     break
                 if(self._settingChangeState_list[deviceID][changeID]["state"] == "rescheduled"):
