@@ -1,6 +1,5 @@
 import json
 import asyncio
-import time
 
 from EstymaApiWrapper import EstymaApi
 
