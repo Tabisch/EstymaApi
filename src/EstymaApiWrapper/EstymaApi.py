@@ -93,6 +93,7 @@ class EstymaApi:
             await self._fetchDevices()
             await self._fetchAvailableDeviceSettings()
             await self._fetchDevicedata()
+            self._settingUpdatingTable = await self._createSettingsUpdateTable()
         except Exception as e:
             #print(e)
             if(throw_Execetion):
@@ -208,6 +209,16 @@ class EstymaApi:
 
         self._deviceDataValues = json.dumps(await self._dataTextToValues(json.loads(self._deviceData)))
 
+    async def _createSettingsUpdateTable(self):
+        settingUpdatingTable = {}
+
+        for deviceId in self._availableSettings.keys():
+            settingUpdatingTable[deviceId] = {}
+            for setting in self._availableSettings[deviceId].keys():
+                settingUpdatingTable[deviceId][setting] = False
+
+        return settingUpdatingTable
+
     async def getDevices(self):
         if(self.initialized == False):
             raise ClientNotInitialized("Estyma API Client is not initialized")
@@ -242,7 +253,7 @@ class EstymaApi:
 
     async def _fetchDevices(self):
         #could be optimised maybe
-        #ripped this stright from the brup suite, works for now so i dont care
+        #ripped this stright from the brup suite, works for now
         data = 'sEcho=1&iColumns=8&sColumns=&iDisplayStart=0&iDisplayLength=5&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&mDataProp_5=5&mDataProp_6=6&mDataProp_7=7&sSearch=&bRegex=false&sSearch_0=&bRegex_0=false&bSearchable_0=true&sSearch_1=&bRegex_1=false&bSearchable_1=true&sSearch_2=&bRegex_2=false&bSearchable_2=true&sSearch_3=&bRegex_3=false&bSearchable_3=true&sSearch_4=&bRegex_4=false&bSearchable_4=true&sSearch_5=&bRegex_5=false&bSearchable_5=true&sSearch_6=&bRegex_6=false&bSearchable_6=true&sSearch_7=&bRegex_7=false&bSearchable_7=true&iSortingCols=1&iSortCol_0=0&sSortDir_0=asc&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=false&bSortable_4=false&bSortable_5=false&bSortable_6=false&bSortable_7=false&sByUserName='
 
         result = await (await self._makeRequest("post", self.devicelist_url.format(self.http_url),data=data)).json(content_type='text/html')
@@ -327,6 +338,8 @@ class EstymaApi:
         self._settingChangeState_list[deviceID][changeID]["targetValue"] = targetValue
         self._settingChangeState_list[deviceID][changeID]["state"] = ""
 
+        self._settingUpdatingTable[deviceID][settingName] = True
+
     async def _handleSettingChangeRequest(self,deviceID: int, changeID: int):
         requestBody=self.settingChangeStateBody.format(deviceID, changeID)
 
@@ -378,12 +391,7 @@ class EstymaApi:
 
         requestResults = await asyncio.gather(*requestList)
 
-        settingUpdatingTable = {}
-
-        for deviceId in self._availableSettings.keys():
-            settingUpdatingTable[deviceId] = {}
-            for setting in self._availableSettings[deviceId].keys():
-                settingUpdatingTable[deviceId][setting] = False
+        settingUpdatingTable = await self._createSettingsUpdateTable()
 
         for res in requestResults:
             self._settingChangeState_list[res["deviceID"]][res["changeID"]]["state"] = res["state"]
