@@ -44,6 +44,7 @@ class EstymaApi:
 
         self._deviceData = "{}"
         self._deviceDataValues = "{}"
+        self._settingUpdatingTable = json.loads("{}")
 
         self._updatingdata = False
         self._lastUpdated = 0
@@ -377,8 +378,18 @@ class EstymaApi:
 
         requestResults = await asyncio.gather(*requestList)
 
+        settingUpdatingTable = {}
+
+        for deviceId in self._availableSettings.keys():
+            settingUpdatingTable[deviceId] = {}
+            for setting in self._availableSettings[deviceId].keys():
+                settingUpdatingTable[deviceId][setting] = False
+
         for res in requestResults:
             self._settingChangeState_list[res["deviceID"]][res["changeID"]]["state"] = res["state"]
+            settingUpdatingTable[f"{res["deviceID"]}"][self._settingChangeState_list[res["deviceID"]][res["changeID"]]["settingName"]] = True
+
+        self._settingUpdatingTable = settingUpdatingTable
 
     #get Current State of Settings Change
     async def getSettingChangeState(self, deviceNumber: int = None, changeID: int= None):
@@ -434,9 +445,9 @@ class EstymaApi:
             if len(self._settingChangeState_list[deviceID].keys()) != 0:
                 return True
 
-        if deviceID in self._settingChangeState_list.keys() and len(settingName) != 0:
-            for id in self._settingChangeState_list[deviceID].keys():
-                if self._settingChangeState_list[deviceID][id]["settingName"] == settingName:
-                    return True
-            
-        return False
+        return self._settingUpdatingTable[deviceID][settingName]
+    
+    async def getUpdatingSettingTable(self):
+        await self._updateAllsettingChangeStates()
+
+        return self._settingUpdatingTable
