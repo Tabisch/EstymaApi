@@ -1,8 +1,6 @@
-Wrapper for the EstymaApi Heating Systems
+Wrapper for the Estyma Heating Systems. \
+Igneo.pl and bia21.net are both work.
 
-This is a work in progess. \
-At the moment the main pupose is reading data. \
-Changing settings is working but still in a really early stage. \
-Im building this to integrate our heating system into home assistant.
+The wrapper ist primarily build to integrate our heating system into home assistant.
 
 https://github.com/Tabisch/Igneo_ha_integration
