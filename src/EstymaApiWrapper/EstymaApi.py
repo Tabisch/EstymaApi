@@ -9,8 +9,6 @@ import re
 from .CustomErrors import SettingNotAvailableException, SettingAlreadyHasTargetValue, ClientNotInitialized
 
 class EstymaApi:
-    http_url = "igneo.pl"
-
     login_url = "https://{0}/login"
     logout_url = "https://{0}/logout"
     deviceSettings_url = "https://{0}/device/{1}"
@@ -29,7 +27,9 @@ class EstymaApi:
 
     updateDiffRegex = r"(\d+)d (\d+)h:(\d+)m:(\d+)s"
 
-    def __init__(self, Email: str, Password: str, scanInterval = 30, language: str = "english", staleDataThresholdSeconds: int = 300):
+    def __init__(self,Email: str, Password: str,Domain: str = "igneo.pl" , scanInterval = 30, language: str = "english", staleDataThresholdSeconds: int = 300):
+        self._http_url = Domain
+        
         self._Email = urllib.parse.quote(Email)
         self._Password = urllib.parse.quote(Password)
         self._devices = None
@@ -107,7 +107,7 @@ class EstymaApi:
 
         dataformated = self.loginDataBody.format(self._Email, self._Password)
 
-        result = (await self._makeRequest("post", self.login_url.format(self.http_url), data=dataformated)).status
+        result = (await self._makeRequest("post", self.login_url.format(self._http_url), data=dataformated)).status
 
         if(result == 302):
             self._initialized = True
@@ -121,7 +121,7 @@ class EstymaApi:
         self._loggedIn = False
 
         try:
-            if((await self._makeRequest("get", self.logout_url.format(self.http_url))).status == 302):
+            if((await self._makeRequest("get", self.logout_url.format(self._http_url))).status == 302):
                 await self._session.close()
                 return
         except:
@@ -151,7 +151,7 @@ class EstymaApi:
 
     #fetch data for all devices
     async def _fetchDevicedatatask(self, deviceid):
-        resp = await (await self._makeRequest("post", self.update_url.format(self.http_url), data=self.fetchDevicedataBody.format(deviceid))).json(content_type='text/html')
+        resp = await (await self._makeRequest("post", self.update_url.format(self._http_url), data=self.fetchDevicedataBody.format(deviceid))).json(content_type='text/html')
         resp["licznik_paliwa_sub1"] = int(str(resp["licznik_paliwa_sub1"])[:-1])
         resp["daystats_data"]["pierwszy_pomiar_paliwa"] = int(str(resp["daystats_data"]["pierwszy_pomiar_paliwa"])[:-1])
         resp["consumption_fuel_current_day"] = resp["licznik_paliwa_sub1"] - resp["daystats_data"]["pierwszy_pomiar_paliwa"]
@@ -256,7 +256,7 @@ class EstymaApi:
         #ripped this stright from the brup suite, works for now
         data = 'sEcho=1&iColumns=8&sColumns=&iDisplayStart=0&iDisplayLength=5&mDataProp_0=0&mDataProp_1=1&mDataProp_2=2&mDataProp_3=3&mDataProp_4=4&mDataProp_5=5&mDataProp_6=6&mDataProp_7=7&sSearch=&bRegex=false&sSearch_0=&bRegex_0=false&bSearchable_0=true&sSearch_1=&bRegex_1=false&bSearchable_1=true&sSearch_2=&bRegex_2=false&bSearchable_2=true&sSearch_3=&bRegex_3=false&bSearchable_3=true&sSearch_4=&bRegex_4=false&bSearchable_4=true&sSearch_5=&bRegex_5=false&bSearchable_5=true&sSearch_6=&bRegex_6=false&bSearchable_6=true&sSearch_7=&bRegex_7=false&bSearchable_7=true&iSortingCols=1&iSortCol_0=0&sSortDir_0=asc&bSortable_0=true&bSortable_1=true&bSortable_2=true&bSortable_3=false&bSortable_4=false&bSortable_5=false&bSortable_6=false&bSortable_7=false&sByUserName='
 
-        result = await (await self._makeRequest("post", self.devicelist_url.format(self.http_url),data=data)).json(content_type='text/html')
+        result = await (await self._makeRequest("post", self.devicelist_url.format(self._http_url),data=data)).json(content_type='text/html')
 
         output_json = json.loads('{}')
 
@@ -301,7 +301,7 @@ class EstymaApi:
         with importlib.resources.open_text("EstymaApiWrapper", 'languageTable.json') as file:
             languageTable = json.load(file)
 
-        url = self.login_url.format(self.http_url, languageTable[targetLanguage.lower()])
+        url = self.login_url.format(self._http_url, languageTable[targetLanguage.lower()])
 
         await self._makeRequest("get", url)
 
@@ -323,7 +323,7 @@ class EstymaApi:
 
         dataBody = self.changeSettingBody.format(deviceID, settingNameTranslated, targetValue)
 
-        url = self.changeSetting_url.format(self.http_url)
+        url = self.changeSetting_url.format(self._http_url)
 
         changeID = await (await self._makeRequest("post", url, data=dataBody)).text()
 
@@ -352,7 +352,7 @@ class EstymaApi:
         #idk why but the request seam to fail like every second try so this is the best i can do for now
         while(True):
             try:
-                state = await (await self._makeRequest("post", self.settingChangeState_url.format(self.http_url), data=requestBody)).text()
+                state = await (await self._makeRequest("post", self.settingChangeState_url.format(self._http_url), data=requestBody)).text()
                 break
             except:
                 pass
@@ -415,13 +415,13 @@ class EstymaApi:
 
     #generate a list of all available settings per device
     async def _fetchAvailableDeviceSettings(self):
-        pattern = re.compile("[\w\d+]{1,}")
+        pattern = re.compile(r"[\w\d+]{1,}")
 
         for deviceID in self._devices.keys():
 
             self._availableSettings[deviceID] = {}
 
-            html = BeautifulSoup(await (await self._makeRequest("get", url=self.deviceSettings_url.format(self.http_url, deviceID))).text(), "html.parser")
+            html = BeautifulSoup(await (await self._makeRequest("get", url=self.deviceSettings_url.format(self._http_url, deviceID))).text(), "html.parser")
             selects = html.find_all("select")
             for select in selects:
                 self._availableSettings[deviceID][select["name"]] = {}
