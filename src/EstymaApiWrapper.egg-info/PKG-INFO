@@ -1,6 +1,6 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: EstymaApiWrapper
-Version: 0.0.67
+Version: 0.0.70
 Summary: Wrapper for the EstymaApi
 Home-page: https://github.com/Tabisch/EstymaApi
 Author: Tabisch
@@ -12,12 +12,11 @@ Classifier: Operating System :: OS Independent
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Dynamic: license-file
 
-Wrapper for the EstymaApi Heating Systems
+Wrapper for the Estyma Heating Systems. \
+Igneo.pl and bia24.net are both work.
 
-This is a work in progess. \
-At the moment the main pupose is reading data. \
-Changing settings is working but still in a really early stage. \
-Im building this to integrate our heating system into home assistant.
+The wrapper ist primarily build to integrate our heating system into home assistant.
 
 https://github.com/Tabisch/Igneo_ha_integration
