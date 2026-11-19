@@ -31,4 +31,17 @@ fuel = await api.getFuelStatistics(deviceID, year=2026, month=1)
 fuel["data"]        # [{"day": 1, "fuel": 41, "price": 0.9, "cost": 36.9, "currency": "PLN"}, ...]
 fuel["fuel_total"]  # summed fuel of the month
 fuel["cost_total"]  # 1320.3
+
+yearly = await api.getFuelStatistics(deviceID, year=2026, month=0)  # whole year, one entry per month
 ```
+
+Check which statistics a device provides (read from its chart page, cached for an hour):
+
+```python
+limits = await api.getStatisticsLimits(deviceID)
+
+limits["statistics"]      # {"dateFrom_min": date, "dateTo_min": date, "dateTo_max": date, "maxRangeDays": 7, "accuracy": {...}, ...}
+limits["fuelStatistics"]  # {"years": [2022, ..., 2026], "months": {0: "whole year", 1: "January", ...}}
+```
+
+`getStatistics` and `getFuelStatistics` check the request against these limits and raise `StatisticsNotAvailable` when it is outside of them. Pass `validate=False` to skip the check.

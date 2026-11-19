@@ -46,3 +46,18 @@ async def fuelTestfunction():
     await api._logout()
 
 asyncio.run(fuelTestfunction())
+
+async def limitsTestfunction():
+    cred = json.load(open("credentials.json"))
+
+    api = EstymaApi(Email= cred["email"], Password= cred["password"])
+
+    await api.initialize()
+
+    deviceID = list((await api.getDevices()).keys())[0]
+
+    print(await api.getStatisticsLimits(deviceID))
+
+    await api._logout()
+
+asyncio.run(limitsTestfunction())
