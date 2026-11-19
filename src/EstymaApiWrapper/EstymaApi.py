@@ -18,6 +18,7 @@ class EstymaApi:
     settingChangeState_url = "https://{0}/info_check_order"
     devicelist_url = "https://{0}/main_panel/get_user_device_list"
     statistics_url = "https://{0}/line-chart"
+    fuelStatistics_url = "https://{0}/chart-fuel"
 
     languageSwitch_url = "https://{0}/switchLanguage/{1}}"
     
@@ -27,6 +28,8 @@ class EstymaApi:
     changeSettingBody = "id_urzadzenia={0}&name={1}&value={2}"
     settingChangeStateBody = "id_urzadzenia={0}&order_number={1}"
     statisticsBody = "id_urzadzenia={0}&accuracy={1}&dp_from={2}&dp_to={3}&show_burner_status={4}"
+
+    fuelStatisticsBody = "id_urzadzenia={0}&year={1}&month={2}"
 
     statisticsDateFormat = "%d-%m-%Y"
     statisticsUnitRegex = r"\(([^)]*)\)\s*$"
@@ -545,3 +548,79 @@ class EstymaApi:
             return series
 
         return await self._parseStatistics(series, translateData)
+
+    #convert numbers like "1,320.30" or "0.9" from the api to float
+    def _parseApiNumber(self, value):
+        if(value is None):
+            return None
+
+        if(isinstance(value, (int, float))):
+            return value
+
+        try:
+            return float(str(value).replace(",", ""))
+        except ValueError:
+            return None
+
+    #download raw fuel consumption statistics for a device
+    async def _fetchFuelStatistics(self, deviceID, year: int, month: int):
+        if((int(time.time()) - self._loginTimeLimit) > self._loginTime):
+            await self._relog()
+
+        dataBody = self.fuelStatisticsBody.format(deviceID, year, month)
+
+        response = await self._makeRequest("post", self.fuelStatistics_url.format(self._http_url), data=dataBody)
+
+        #api answers with content type text/html, so parse the body manually
+        return json.loads(await response.text())
+
+    #turn the raw fuel chart response into a flat dict with one entry per day
+    async def _parseFuelStatistics(self, series: list, year: int, month: int):
+        fuelSeries = next((entry for entry in series if entry.get("name") == "fuel"), series[0] if series else {})
+
+        output = {}
+        output["year"] = year
+        output["month"] = month
+        output["data"] = []
+
+        for point in fuelSeries.get("data", []):
+            parsed = {}
+            parsed["day"] = point.get("name")
+            parsed["fuel"] = point.get("y")
+            parsed["price"] = self._parseApiNumber(point.get("stawka"))
+            parsed["cost"] = self._parseApiNumber(point.get("koszt"))
+            parsed["currency"] = point.get("waluta")
+
+            output["data"].append(parsed)
+
+        output["fuel_total"] = sum((point["fuel"] or 0) for point in output["data"])
+        output["cost_total"] = self._parseApiNumber(fuelSeries.get("total_cost"))
+        output["cost_total_by_currency"] = {currency: self._parseApiNumber(value) for currency, value in (fuelSeries.get("total_cost2") or {}).items()}
+        output["currency"] = next((point["currency"] for point in output["data"] if point["currency"]), None)
+
+        return output
+
+    #get fuel consumption statistics of a device for one month (defaults to the current month)
+    async def getFuelStatistics(self, deviceID, year: int = None, month: int = None, raw: bool = False):
+        if(self.initialized == False):
+            raise ClientNotInitialized("Estyma API Client is not initialized")
+
+        today = datetime.date.today()
+
+        if(year is None):
+            year = today.year
+
+        if(month is None):
+            month = today.month
+
+        try:
+            series = await self._fetchFuelStatistics(deviceID, year, month)
+        except Exception:
+            #session might have expired, retry once after logging in again
+            await self._relog()
+            series = await self._fetchFuelStatistics(deviceID, year, month)
+
+        if(raw):
+            return series
+
+        return await self._parseFuelStatistics(series, year, month)

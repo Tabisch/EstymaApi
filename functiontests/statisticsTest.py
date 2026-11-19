@@ -29,3 +29,20 @@ async def testfunction():
     await api._logout()
 
 asyncio.run(testfunction())
+
+async def fuelTestfunction():
+    cred = json.load(open("credentials.json"))
+
+    api = EstymaApi(Email= cred["email"], Password= cred["password"])
+
+    await api.initialize()
+
+    deviceID = list((await api.getDevices()).keys())[0]
+
+    fuel = await api.getFuelStatistics(deviceID)
+
+    print(f'fuel this month: {fuel["fuel_total"]}, cost: {fuel["cost_total"]} {fuel["currency"]}')
+
+    await api._logout()
+
+asyncio.run(fuelTestfunction())
