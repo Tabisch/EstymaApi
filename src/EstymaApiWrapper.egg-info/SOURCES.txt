@@ -11,4 +11,5 @@ src/EstymaApiWrapper/languageTable.json
 src/EstymaApiWrapper.egg-info/PKG-INFO
 src/EstymaApiWrapper.egg-info/SOURCES.txt
 src/EstymaApiWrapper.egg-info/dependency_links.txt
+src/EstymaApiWrapper.egg-info/requires.txt
 src/EstymaApiWrapper.egg-info/top_level.txt
