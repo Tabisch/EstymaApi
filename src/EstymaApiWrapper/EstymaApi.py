@@ -3,6 +3,7 @@ import urllib.parse
 import aiohttp
 import asyncio
 import time
+import datetime
 import importlib.resources
 from bs4 import BeautifulSoup
 import re
@@ -16,6 +17,7 @@ class EstymaApi:
     changeSetting_url = "https://{0}/info_set_order"
     settingChangeState_url = "https://{0}/info_check_order"
     devicelist_url = "https://{0}/main_panel/get_user_device_list"
+    statistics_url = "https://{0}/line-chart"
 
     languageSwitch_url = "https://{0}/switchLanguage/{1}}"
     
@@ -24,6 +26,10 @@ class EstymaApi:
     loginDataBody = "login={0}&haslo={1}&zaloguj=Login"
     changeSettingBody = "id_urzadzenia={0}&name={1}&value={2}"
     settingChangeStateBody = "id_urzadzenia={0}&order_number={1}"
+    statisticsBody = "id_urzadzenia={0}&accuracy={1}&dp_from={2}&dp_to={3}&show_burner_status={4}"
+
+    statisticsDateFormat = "%d-%m-%Y"
+    statisticsUnitRegex = r"\(([^)]*)\)\s*$"
 
     updateDiffRegex = r"(\d+)d (\d+)h:(\d+)m:(\d+)s"
 
@@ -459,3 +465,83 @@ class EstymaApi:
         await self._updateAllsettingChangeStates()
 
         return self._settingUpdatingTable
+
+    #convert date input for the statistics request to the DD-MM-YYYY format the api expects
+    def _formatStatisticsDate(self, value):
+        if(value is None):
+            return "0"
+
+        if(isinstance(value, (datetime.date, datetime.datetime))):
+            return value.strftime(self.statisticsDateFormat)
+
+        return str(value)
+
+    #download raw statistics (line chart) data for a device
+    async def _fetchStatistics(self, deviceID, dateFrom = None, dateTo = None, accuracy: int = 0, showBurnerStatus: bool = False):
+        if((int(time.time()) - self._loginTimeLimit) > self._loginTime):
+            await self._relog()
+
+        if(dateTo is None):
+            dateTo = datetime.date.today()
+
+        dataBody = self.statisticsBody.format(
+            deviceID,
+            accuracy,
+            self._formatStatisticsDate(dateFrom),
+            self._formatStatisticsDate(dateTo),
+            str(showBurnerStatus).lower()
+        )
+
+        response = await self._makeRequest("post", self.statistics_url.format(self._http_url), data=dataBody)
+
+        #api answers with content type text/html, so parse the body manually
+        return json.loads(await response.text())
+
+    #turn the raw line chart series list into a dict keyed by (translated) series id
+    async def _parseStatistics(self, series: list, translateData: bool = True):
+        output = {}
+
+        for entry in series:
+            apiID = entry.get("id")
+            seriesID = apiID
+
+            if(translateData):
+                seriesID = self._translationTable["deviceState"].get(apiID, apiID)
+
+            name = str(entry.get("name", "")).strip()
+            unitMatch = re.search(self.statisticsUnitRegex, name)
+
+            parsed = {}
+            parsed["id"] = seriesID
+            parsed["api_id"] = apiID
+            parsed["name"] = name
+            parsed["unit"] = unitMatch.group(1).strip() if unitMatch else None
+            parsed["visible"] = entry.get("visible")
+            parsed["legendIndex"] = entry.get("legendIndex")
+            parsed["from"] = entry.get("FROM")
+            parsed["to"] = entry.get("TO")
+            #timestamps from the api are epoch milliseconds, convert to epoch seconds
+            parsed["data"] = [{"timestamp": int(point[0] / 1000), "value": point[1]} for point in entry.get("data", [])]
+
+            output[seriesID] = parsed
+
+        return output
+
+    #get statistics (line chart) data for a device
+    #dateFrom/dateTo accept datetime.date objects or "DD-MM-YYYY" strings
+    #without dateFrom the api returns the single day given by dateTo (defaults to today)
+    async def getStatistics(self, deviceID, dateFrom = None, dateTo = None, accuracy: int = 0, showBurnerStatus: bool = False, translateData: bool = True, raw: bool = False):
+        if(self.initialized == False):
+            raise ClientNotInitialized("Estyma API Client is not initialized")
+
+        try:
+            series = await self._fetchStatistics(deviceID, dateFrom, dateTo, accuracy, showBurnerStatus)
+        except Exception:
+            #session might have expired, retry once after logging in again
+            await self._relog()
+            series = await self._fetchStatistics(deviceID, dateFrom, dateTo, accuracy, showBurnerStatus)
+
+        if(raw):
+            return series
+
+        return await self._parseStatistics(series, translateData)
