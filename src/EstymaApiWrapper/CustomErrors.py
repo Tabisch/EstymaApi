@@ -10,3 +10,7 @@ class ClientNotInitialized(Exception):
     pass
     #print("Estyma API Client is not initialized")
     #print("Initialize the client before using it")
+
+class StatisticsNotAvailable(Exception):
+    pass
+    #print("The requested statistics range is outside the data the api provides")
